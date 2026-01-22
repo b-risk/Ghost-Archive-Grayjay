@@ -1,0 +1,23 @@
+{
+	"name": "Ghost Archive",
+	"description": "Ghostarchive is a free-to-use archiving website designed to be fast and easy to use.",
+	"author": "Freeb",
+	"authorUrl": "https://github.com/b-risk",
+	
+	"sourceUrl": "https://yoursite.com/SomeConfig.json",
+	"repositoryUrl": "https://github.com/b-risk/Ghost-Archive-Grayjay",
+	"scriptUrl": "./SomeScript.js",
+	"version": 1,
+	
+	"iconUrl": "./GhostArchiveIcon.png",
+	"id": "b0352c26-7142-4ad2-a151-67fb7428bbcd",
+	
+	"scriptSignature": "<ommitted>",
+	"scriptPublicKey": "<ommitted>",
+	"packages": ["Http"],
+	
+	"allowEval": false,
+	"allowUrls": [
+		"ghostarchive.org"
+	]
+}
