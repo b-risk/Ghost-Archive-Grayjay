@@ -176,11 +176,11 @@ source.getContentDetails = function(url) {
                 </body></html>`
             );
         }
-        throw new ScriptException("Failed to fetch video details for: " + videoId);
+        throw new ScriptException("Failed to fetch video details for: " + `${PLATFORM_BASE_URL}/varchive/${videoId}`);
     }
 
     if (!videoData) {
-        throw new ScriptException("Failed to fetch video details for: " + videoId);
+        throw new ScriptException("Failed to fetch video details for: " + `${PLATFORM_BASE_URL}/varchive/${videoId}`);
     }
 
     // Check if video is disabled
@@ -290,6 +290,12 @@ function makeGetRequest(url, parseJson = true, returnError = false) {
         return null;
     }
 }
+
+// Helper: Build YouTube URL from video ID
+function buildYouTubeUrl(videoId) {
+    return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
 // Helper: Build GhostArchive save URL for archiving
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
