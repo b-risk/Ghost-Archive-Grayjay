@@ -269,12 +269,14 @@ function isYouTubeVideoUrl(url) {
 // Helper: Make HTTP GET request
 function makeGetRequest(url, parseJson = true, returnError = false) {
     try {
-        const resp = http.GET(url);
+        const resp = http.GET(url, {headers: {
+            'user-agent': "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36"
+        } });
         if (!resp.isOk) {
             if (returnError) {
                 return { error: true, code: resp.code, body: resp.body };
             }
-            throw new ScriptException(`Request failed with status ${resp.code}: ${url}`);
+            log(`Request failed with status ${resp.code}: ${url}`);
             return null;
         }
         if (parseJson) {
@@ -296,6 +298,7 @@ function buildYouTubeUrl(videoId) {
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
     const resp = http.GET(url, { headers: {
+        'referer': 'https://ghostarchive.org/',
         'archive': youtubeUrl
     }});
     return resp;
