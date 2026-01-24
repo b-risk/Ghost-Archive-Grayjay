@@ -176,7 +176,7 @@ source.getContentDetails = function(url) {
     }
 
     if (!videoData) {
-        throw new ScriptException("Failed to fetch video details for: " + videoId);
+        throw new ScriptException("Failed to fetch video details for: " + apiUrl);
     }
 
     // Check if video is disabled
