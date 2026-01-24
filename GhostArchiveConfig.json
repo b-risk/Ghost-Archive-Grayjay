@@ -6,14 +6,12 @@
 	
 	"sourceUrl": "https://raw.githubusercontent.com/b-risk/Ghost-Archive-Grayjay/refs/heads/main/GhostArchiveConfig.json",
 	"repositoryUrl": "https://github.com/b-risk/Ghost-Archive-Grayjay",
-	"scriptUrl": "./SomeScript.js",
+	"scriptUrl": "./GhostArchiveScript.js",
 	"version": 1,
 	
 	"iconUrl": "./GhostArchiveIcon.png",
 	"id": "b0352c26-7142-4ad2-a151-67fb7428bbcd",
-	
-	"scriptSignature": "<ommitted>",
-	"scriptPublicKey": "<ommitted>",
+
 	"packages": ["Http"],
 	
 	"allowEval": false,
