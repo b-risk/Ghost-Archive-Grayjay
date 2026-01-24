@@ -180,7 +180,7 @@ source.getContentDetails = function(url) {
     }
 
     if (!videoData) {
-        throw new ScriptException("Failed to fetch video details for: " + videoId + " with code: " + videoData.code);
+        throw new ScriptException("Failed to fetch video details for: " + videoId);
     }
 
     // Check if video is disabled
@@ -275,10 +275,10 @@ function makeGetRequest(url, parseJson = true, returnError = false) {
     try {
         const resp = http.GET(url, {});
         if (!resp.isOk) {
-            log(`Request failed with status ${resp.code}: ${url}`);
             if (returnError) {
                 return { error: true, code: resp.code, body: resp.body };
             }
+            throw new ScriptException(`Request failed with status ${resp.code}: ${url}`);
             return null;
         }
         if (parseJson) {

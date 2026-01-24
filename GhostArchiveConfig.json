@@ -18,5 +18,11 @@
 	"allowUrls": [
 		"ghostarchive.org",
 		"ghostvideo.b-cdn.net"
-	]
+	],
+	
+	"captcha": {
+		"userAgent": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36",
+		"captchaUrl": null,
+			"completionUrl": "https://ghostarchive.org/varchive/*"
+	}
 }
