@@ -167,16 +167,12 @@ source.getContentDetails = function(url) {
             // Video not archived - throw captcha exception to allow archiving
             const saveUrl = buildSaveUrl(videoId);
             log(`Video ${videoId} not archived. Redirecting to save page: ${saveUrl}`);
-            throw new CaptchaRequiredException(saveUrl,
-                `<html><body>
-                <h1>Video Not Archived</h1>
-                <p>This video is not yet archived on GhostArchive.</p>
-                <p>Solve the captcha to request archiving. After completion, try playing the video again.</p>
-                <script>window.location.href = "${saveUrl}";</script>
-                </body></html>`
+
+            throw new CaptchaRequiredException(saveUrl.url,
+                saveUrl.body
             );
         }
-        throw new ScriptException("Failed to fetch video details for: " + videoId);
+        throw new ScriptException("Failed to fetch video details for: " + apiUrl);
     }
 
     if (!videoData) {
@@ -273,7 +269,7 @@ function isYouTubeVideoUrl(url) {
 // Helper: Make HTTP GET request
 function makeGetRequest(url, parseJson = true, returnError = false) {
     try {
-        const resp = http.GET(url, {});
+        const resp = http.GET(url);
         if (!resp.isOk) {
             if (returnError) {
                 return { error: true, code: resp.code, body: resp.body };
@@ -299,7 +295,10 @@ function buildYouTubeUrl(videoId) {
 // Helper: Build GhostArchive save URL for archiving
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
-    return `${PLATFORM_BASE_URL}/save?url=${encodeURIComponent(youtubeUrl)}`;
+    const resp = http.GET(url, { headers: {
+        'archive': youtubeUrl
+    }});
+    return resp;
 }
 
 // Helper: Create PlatformID
