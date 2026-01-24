@@ -170,17 +170,17 @@ source.getContentDetails = function(url) {
             throw new CaptchaRequiredException(saveUrl,
                 `<html><body>
                 <h1>Video Not Archived</h1>
-                <p>This video is not yet archived on PreserveTube.</p>
+                <p>This video is not yet archived on GhostArchive.</p>
                 <p>Solve the captcha to request archiving. After completion, try playing the video again.</p>
                 <script>window.location.href = "${saveUrl}";</script>
                 </body></html>`
             );
         }
-        throw new ScriptException("Failed to fetch video details for: " + `${PLATFORM_BASE_URL}/varchive/${videoId}`);
+        throw new ScriptException("Failed to fetch video details for: " + videoId);
     }
 
     if (!videoData) {
-        throw new ScriptException("Failed to fetch video details for: " + `${PLATFORM_BASE_URL}/varchive/${videoId}`);
+        throw new ScriptException("Failed to fetch video details for: " + videoId + " with code: " + videoData.code);
     }
 
     // Check if video is disabled

@@ -1,7 +1,7 @@
 {
 	"name": "Ghost Archive",
 	"description": "Ghostarchive is a free-to-use archiving website designed to be fast and easy to use.",
-	"author": "Freeb",
+	"author": "Freeb, Stefan Cruz",
 	"authorUrl": "https://github.com/b-risk",
 	
 	"sourceUrl": "https://raw.githubusercontent.com/b-risk/Ghost-Archive-Grayjay/refs/heads/main/GhostArchiveConfig.json",
@@ -16,6 +16,7 @@
 	
 	"allowEval": false,
 	"allowUrls": [
-		"ghostarchive.org"
+		"ghostarchive.org",
+		"ghostvideo.b-cdn.net"
 	]
 }
