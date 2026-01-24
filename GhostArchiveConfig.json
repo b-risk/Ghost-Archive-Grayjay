@@ -4,7 +4,7 @@
 	"author": "Freeb",
 	"authorUrl": "https://github.com/b-risk",
 	
-	"sourceUrl": "https://yoursite.com/SomeConfig.json",
+	"sourceUrl": "https://raw.githubusercontent.com/b-risk/Ghost-Archive-Grayjay/refs/heads/main/GhostArchiveConfig.json",
 	"repositoryUrl": "https://github.com/b-risk/Ghost-Archive-Grayjay",
 	"scriptUrl": "./SomeScript.js",
 	"version": 1,
