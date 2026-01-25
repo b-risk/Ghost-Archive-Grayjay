@@ -276,7 +276,7 @@ function makeGetRequest(url, parseJson = true, returnError = false) {
             if (returnError) {
                 return { error: true, code: resp.code, body: resp.body };
             }
-            log(`Request failed with status ${resp.code}: ${url}`);
+            log(`Request failed with status ${resp.status}: ${resp.body}`);
             return null;
         }
         if (parseJson) {
