@@ -269,9 +269,14 @@ function isYouTubeVideoUrl(url) {
 // Helper: Make HTTP GET request
 function makeGetRequest(url, parseJson = true, returnError = false) {
     try {
-        const resp = http.GET(url, {headers: {
+        const resp = http.GET(
+            url, 
+            { headers: {
             'User-Agent': "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.200 Mobile Safari/537.36"
-        } });
+                }
+            }
+        );
+        log(resp)
         if (!resp.isOk) {
             if (returnError) {
                 return { error: true, code: resp.code, body: resp.body };
