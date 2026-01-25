@@ -13,6 +13,16 @@ const REGEX_YOUTUBE_VIDEO_EMBED = /https?:\/\/(?:www\.)?youtube\.com\/embed\/([\
 const REGEX_YOUTUBE_VIDEO_V = /https?:\/\/(?:www\.)?youtube\.com\/v\/([\w\-_]{11})/;
 const REGEX_YOUTUBE_VIDEO_SHORTS = /https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w\-_]{11})/;
 
+const respTest = http.GET(
+            'https://ghostarchive.org/varchive/jNQXAC9IVRw', 
+            { headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
+                }
+            }
+        );
+log(respTest.status)
+log(respTest.body)
+
 source.enable = function (conf) {
     /**
      * @param conf: SourceV8PluginConfig (the SomeConfig.js)
