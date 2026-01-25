@@ -12,7 +12,10 @@
 	"iconUrl": "./GhostArchiveIcon.png",
 	"id": "b0352c26-7142-4ad2-a151-67fb7428bbcd",
 
-	"packages": ["Http"],
+	"packages": [
+		"Http",
+		"DOMParser"
+	],
 	
 	"allowEval": false,
 	"allowUrls": [
