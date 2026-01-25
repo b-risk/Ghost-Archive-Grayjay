@@ -20,8 +20,9 @@ const respTest = http.GET(
                 }
             }
         );
-log(respTest.status)
-log(respTest.body)
+log(respTest.isOk);
+log(respTest.status);
+log(JSON.parse(respTest.body));
 
 source.enable = function (conf) {
     /**
