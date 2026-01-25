@@ -14,7 +14,7 @@ const REGEX_YOUTUBE_VIDEO_V = /https?:\/\/(?:www\.)?youtube\.com\/v\/([\w\-_]{11
 const REGEX_YOUTUBE_VIDEO_SHORTS = /https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w\-_]{11})/;
 
 const respTest = http.GET(
-            'https://ghostarchive.org/varchive/jNQXAC9IVRw', 
+            'https://preservetube.com/watch?v=jNQXAC9IVRw', 
             { headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
                 }
