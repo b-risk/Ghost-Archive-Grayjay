@@ -19,7 +19,8 @@
 	
 	"allowEval": false,
 	"allowUrls": [
-		"ghostarchive.org"
+		"ghostarchive.org",
+		"ghostvideo.b-cdn.net"
 	],
 	
 	"captcha": {
