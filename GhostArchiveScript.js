@@ -216,7 +216,7 @@ source.getContentDetails = function(url) {
         viewCount: -1,
         url: apiUrl,
         isLive: false,
-        description: videoData.description || "",
+        description: "",
         video: getVideoSource(videoEmbed)
     });
 };
@@ -342,10 +342,14 @@ function buildYouTubeUrl(videoId) {
 // Helper: Build GhostArchive save URL for archiving
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
-    const resp = http.GET('https://ghostarchive.org/archive2', { headers: {
-        'referer': 'https://ghostarchive.org/',
-        'archive': youtubeUrl
-    }});
+    const resp = http.GET(
+        'https://ghostarchive.org/archive2?', 
+        {
+            referer: PLATFORM_BASE_URL, 
+            body: `archive=${encodeURIComponent(youtubeUrl)}`
+        }
+    );
+
     return resp;
 }
 
