@@ -1,5 +1,6 @@
 const PLATFORM = "GhostArchive";
 const PLATFORM_BASE_URL = "https://ghostarchive.org";
+const VIDEO_EMBED_URL = "https://ghostvideo.b-cdn.net/video/"
 
 // URL patterns
 const REGEX_VIDEO_URL = /https:\/\/ghostarchive\.org\/varchive\/([\w\-_]+)/
@@ -13,18 +14,24 @@ const REGEX_YOUTUBE_VIDEO_EMBED = /https?:\/\/(?:www\.)?youtube\.com\/embed\/([\
 const REGEX_YOUTUBE_VIDEO_V = /https?:\/\/(?:www\.)?youtube\.com\/v\/([\w\-_]{11})/;
 const REGEX_YOUTUBE_VIDEO_SHORTS = /https?:\/\/(?:www\.|m\.)?youtube\.com\/shorts\/([\w\-_]{11})/;
 
-const respTest = http.GET(
-            'https://preservetube.com/watch?v=jNQXAC9IVRw', 
-            { headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
-                }
-            }
-        );
-log(respTest.isOk);
-log(respTest.status);
-log(JSON.parse(respTest.body));
+// URL patterns - YouTube Channel
+// Supports: youtube.com/channel/UCxxx, youtube.com/@handle, youtube.com/c/name, youtube.com/user/name
+const REGEX_YOUTUBE_CHANNEL_ID = /https?:\/\/(?:www\.|m\.)?youtube\.com\/channel\/(UC[\w\-_]{22})/;
+const REGEX_YOUTUBE_CHANNEL_HANDLE = /https?:\/\/(?:www\.|m\.)?youtube\.com\/@([\w\-_.]+)/;
+const REGEX_YOUTUBE_CHANNEL_CUSTOM = /https?:\/\/(?:www\.|m\.)?youtube\.com\/c\/([^\/\?]+)/;
+const REGEX_YOUTUBE_CHANNEL_USER = /https?:\/\/(?:www\.|m\.)?youtube\.com\/user\/([^\/\?]+)/;
+
+// Video metadata for GhostArchive videos
+const REGEX_VIDEO_TITLE = /type="video\/mp4"><\/video><h2>(.*?)<\/h2><p>/;
+const REGEX_VIDEO_AUTHOR = /Uploader: <a rel="nofollow" href="(.*?)">(.*?)<\/a>/;
+const REGEX_VIDEO_DATE = /Original upload date:\s*([^<]+?)(?=<)/;
+
+
+// State
+let config = {};
 
 source.enable = function (conf) {
+    config = conf ?? {};
     /**
      * @param conf: SourceV8PluginConfig (the SomeConfig.js)
      */
@@ -126,14 +133,10 @@ source.searchChannels = function (query, continuationToken) {
     return new SomeChannelPager(channels, hasMore, context);
 }
 
+// Source: Is Channel URL (accepts PreserveTube and YouTube channel URLs)
 source.isChannelUrl = function(url) {
-    /**
-     * @param url: string
-     * @returns: boolean
-     */
-
-	return REGEX_CHANNEL_URL.test(url);
-}
+    return isYouTubeChannelUrl(url);
+};
 
 source.getChannel = function(url) {
 	return new PlatformChannel({
@@ -173,47 +176,48 @@ source.getContentDetails = function(url) {
     const videoData = makeGetRequest(apiUrl, true, true);
 
     // Check if video is not archived (404)
-    if (videoData && videoData.error) {
-        if (videoData.code === 404) {
-            // Video not archived - throw captcha exception to allow archiving
-            const saveUrl = buildSaveUrl(videoId);
-            log(`Video ${videoId} not archived. Redirecting to save page: ${saveUrl}`);
-
-            throw new CaptchaRequiredException(saveUrl.url,
-                saveUrl.body
-            );
-        }
-        throw new ScriptException("Failed to fetch video details for: " + apiUrl);
+    if (videoData && videoData.includes("404 Not Found")) {
+        // Video not archived - throw captcha exception to allow archiving
+        const saveUrl = buildSaveUrl(videoId);
+        log(`Video ${videoId} not archived. Redirecting to save page: ${saveUrl}`);
+        throw new CaptchaRequiredException(saveUrl.url,
+            saveUrl.body
+        );
     }
 
     if (!videoData) {
         throw new ScriptException("Failed to fetch video details for: " + apiUrl);
     }
 
-    // Check if video is disabled
+    // Check if video is disabled REGEX_CHANNEL_URL
     if (videoData.disabled) {
         throw new UnavailableException("This video has been disabled");
     }
 
+    const videoMeta = extractVideoMetadata(videoData);
+    const videoEmbed = `${VIDEO_EMBED_URL}${videoId}/${videoId}.mp4`;
+
+    // Video metadata check troubleshooter: throw new ScriptException("\nTitle: " + videoMeta.title + "\nAuthorURL: " + videoMeta.authorURL + "\nChannelID: " + extractChannelId(videoMeta.authorURL) + "\nAuthorName: " + videoMeta.authorName + "\nDate: " + videoMeta.date + "\nUNIX: " + parseDate(videoMeta.date) + "\nHTML: " + videoData);
+
     const author = createAuthorLink(
-        videoData.channelId || "unknown",
-        videoData.channel || "Unknown",
-        videoData.channelId ? `${PLATFORM_BASE_URL}/channel/${videoData.channelId}` : null,
-        videoData.channelAvatar || ""
+        extractChannelId(videoMeta.authorURL),
+        videoMeta.authorName,
+        videoMeta.authorURL,
+        ""
     );
 
     return new PlatformVideoDetails({
-        id: createPlatformID(videoData.id),
-        name: videoData.title || `Video ${videoData.id}`,
-        thumbnails: new Thumbnails([new Thumbnail(videoData.thumbnail || "", 0)]),
+        id: createPlatformID(videoId),
+        name: videoMeta.title || `Video ${videoId}`,
+        thumbnails: new Thumbnails([new Thumbnail("", 0)]),
         author: author,
-        uploadDate: parseDate(videoData.published),
+        uploadDate: parseDate(videoMeta.date),
         duration: 0,
         viewCount: -1,
-        url: `${PLATFORM_BASE_URL}/varchive/${videoData.id}`,
+        url: apiUrl,
         isLive: false,
         description: videoData.description || "",
-        video: getVideoSource(videoData)
+        video: getVideoSource(videoEmbed)
     });
 };
 
@@ -268,6 +272,17 @@ function extractVideoId(url) {
     return null;
 }
 
+// Helper: Extract video metadata from Ghost Archive such as title and author
+function extractVideoMetadata(html) {
+    const authorInfo = html.match(REGEX_VIDEO_AUTHOR);
+    return {
+        title: html.match(REGEX_VIDEO_TITLE)[1] || 'Unknown',
+        authorURL: authorInfo[1] || 'Unknown',
+        authorName: authorInfo[2] || 'Unknown',
+        date: html.match(REGEX_VIDEO_DATE)[1] || 'Unknown'
+    };
+}
+
 // Helper: Check if URL is a YouTube video URL
 function isYouTubeVideoUrl(url) {
     return REGEX_YOUTUBE_VIDEO_WATCH.test(url) ||
@@ -277,32 +292,45 @@ function isYouTubeVideoUrl(url) {
            REGEX_YOUTUBE_VIDEO_SHORTS.test(url);
 }
 
+// Helper: Extract channel ID from URL (supports YouTube URLs)
+function extractChannelId(url) {
+    // Try YouTube channel ID (UCxxx)
+    let match = url.match(REGEX_YOUTUBE_CHANNEL_ID);
+    if (match) return match[1];
+
+    // Try YouTube handle (@name)
+    match = url.match(REGEX_YOUTUBE_CHANNEL_HANDLE);
+    if (match) return "@" + match[1];
+
+    // Try YouTube custom URL (/c/name)
+    match = url.match(REGEX_YOUTUBE_CHANNEL_CUSTOM);
+    if (match) return match[1];
+
+    // Try YouTube user URL (/user/name)
+    match = url.match(REGEX_YOUTUBE_CHANNEL_USER);
+    if (match) return match[1];
+
+    return null;
+}
+
+// Helper: Check if URL is a YouTube channel URL
+function isYouTubeChannelUrl(url) {
+    return REGEX_YOUTUBE_CHANNEL_ID.test(url) ||
+           REGEX_YOUTUBE_CHANNEL_HANDLE.test(url) ||
+           REGEX_YOUTUBE_CHANNEL_CUSTOM.test(url) ||
+           REGEX_YOUTUBE_CHANNEL_USER.test(url);
+}
+
 // Helper: Make HTTP GET request
-function makeGetRequest(url, parseJson = true, returnError = false) {
+function makeGetRequest(url) {
     try {
         const resp = http.GET(
             url, 
-            { headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36'
-                }
-            }
+            {}
         );
-        log(resp.status);
-        log(resp.body);
-        if (!resp.isOk) {
-            if (returnError) {
-                return { error: true, code: resp.code, body: resp.body };
-            }
-            log(`Request failed with status ${resp.status}: ${resp.body}`);
-            return null;
-        }
-        if (parseJson) {
-            return JSON.parse(resp.body);
-        }
         return resp.body;
     } catch (e) {
-        log(`Request error: ${e.message}`);
-        return null;
+        throw new ScriptException(`Request error: ${e.message}`);
     }
 }
 
@@ -314,11 +342,21 @@ function buildYouTubeUrl(videoId) {
 // Helper: Build GhostArchive save URL for archiving
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
-    const resp = http.GET(url, { headers: {
+    const resp = http.GET('https://ghostarchive.org/archive2', { headers: {
         'referer': 'https://ghostarchive.org/',
         'archive': youtubeUrl
     }});
     return resp;
+}
+
+// Helper: Create PlatformAuthorLink
+function createAuthorLink(channelId, channelName, channelUrl, thumbnail) {
+    return new PlatformAuthorLink(
+        createPlatformID(channelId),
+        channelName || "Unknown",
+        channelUrl || `${PLATFORM_BASE_URL}/channel/${channelId}`,
+        thumbnail || ""
+    );
 }
 
 // Helper: Create PlatformID
@@ -327,9 +365,7 @@ function createPlatformID(id) {
 }
 
 // Helper: Get video source descriptor
-function getVideoSource(videoData) {
-    const sourceUrl = videoData.source || `https://ghostvideo.b-cdn.net/video/${videoData.id}/${videoData.id}.mp4`;
-
+function getVideoSource(sourceUrl) {
     return new VideoSourceDescriptor([
         new VideoUrlSource({
             name: "MP4",
