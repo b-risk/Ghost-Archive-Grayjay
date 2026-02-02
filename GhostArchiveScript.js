@@ -2,6 +2,8 @@ const PLATFORM = "GhostArchive";
 const PLATFORM_BASE_URL = "https://ghostarchive.org";
 const VIDEO_EMBED_URL = "https://ghostvideo.b-cdn.net/video/"
 
+const VIDEO_ARCHIVE_RETRY_AMOUNT = 7;
+
 // URL patterns
 const REGEX_VIDEO_URL = /https:\/\/ghostarchive\.org\/varchive\/([\w\-_]+)/
 
@@ -178,8 +180,19 @@ source.getContentDetails = function(url) {
     // Check if video is not archived (404)
     if (videoData && videoData.includes("404 Not Found")) {
         // Video not archived - throw captcha exception to allow archiving
-        const saveUrl = buildSaveUrl(videoId);
+        let saveUrl = buildSaveUrl(videoId);
         log(`Video ${videoId} not archived. Redirecting to save page: ${saveUrl}`);
+
+        // Check if GhostArchive is down for maintenance - retry to get the page until it works
+        for (
+            let i = 0; 
+            saveUrl.body.includes("The site is under maintenance and will be back soon") 
+            && i < VIDEO_ARCHIVE_RETRY_AMOUNT; 
+            i++) {
+                saveUrl = buildSaveUrl(videoId);
+            }
+        if (saveUrl.body.includes("The site is under maintenance and will be back soon"))
+            throw new UnavailableException("GhostArchive's servers are temporarily unavailable due to maintenance, try again later.")
         throw new CaptchaRequiredException(saveUrl.url,
             saveUrl.body
         );
@@ -274,12 +287,20 @@ function extractVideoId(url) {
 
 // Helper: Extract video metadata from Ghost Archive such as title and author
 function extractVideoMetadata(html) {
-    const authorInfo = html.match(REGEX_VIDEO_AUTHOR);
+    let authorInfo = html.match(REGEX_VIDEO_AUTHOR);
+    let authorLink = authorInfo;
+    let authorName = authorInfo;
+    let videoTitle  = html.match(REGEX_VIDEO_TITLE);
+    let videoDate = html.match(REGEX_VIDEO_DATE);
+
+    if (authorInfo) authorLink = authorInfo[1]; authorName = authorInfo[2];
+    if (videoTitle) videoTitle = videoTitle[1];
+    if (videoDate) videoDate = videoDate[1];
     return {
-        title: html.match(REGEX_VIDEO_TITLE)[1] || 'Unknown',
-        authorURL: authorInfo[1] || 'Unknown',
-        authorName: authorInfo[2] || 'Unknown',
-        date: html.match(REGEX_VIDEO_DATE)[1] || 'Unknown'
+        title: videoTitle || 'Unknown',
+        authorURL: authorInfo || 'Unknown',
+        authorName: authorInfo2 || 'Unknown',
+        date: videoDate || 'Unknown'
     };
 }
 
@@ -343,13 +364,13 @@ function buildYouTubeUrl(videoId) {
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
     const resp = http.POST(
-        'https://ghostarchive.org/archive2?', 
+        'https://ghostarchive.org/archive2', 
         `archive=${encodeURIComponent(youtubeUrl)}`, 
         {
-            referer: PLATFORM_BASE_URL,
+            referer: PLATFORM_BASE_URL, 
         }, 
         false
-);
+    );
 
     return resp;
 }
