@@ -342,13 +342,14 @@ function buildYouTubeUrl(videoId) {
 // Helper: Build GhostArchive save URL for archiving
 function buildSaveUrl(videoId) {
     const youtubeUrl = buildYouTubeUrl(videoId);
-    const resp = http.GET(
+    const resp = http.POST(
         'https://ghostarchive.org/archive2?', 
+        `archive=${encodeURIComponent(youtubeUrl)}`, 
         {
-            referer: PLATFORM_BASE_URL, 
-            body: `archive=${encodeURIComponent(youtubeUrl)}`
-        }
-    );
+            referer: PLATFORM_BASE_URL,
+        }, 
+        false
+);
 
     return resp;
 }
